@@ -43,6 +43,7 @@ def hamming(instance, goal): # number of blocks out of place
 
 def manhattan(instance, goal): # sum of Manhattan distances between blocks and goal
     manhattan_dist = 0
+    """
     # if we want the heuristic to be admissible, then we shouldn't count the blank tile
     for digit in range(1, 9): # hence we only search numbers 1 through 8
         for row in range(3):
@@ -56,6 +57,20 @@ def manhattan(instance, goal): # sum of Manhattan distances between blocks and g
                     goal_row = row
                     goal_col = col
         manhattan_dist += (abs(instance_row - goal_row) + abs(instance_col - goal_col))
+    """
+
+    # if we want the heuristic to be admissible, then we shouldn't count the blank tile
+    for rows in range(3):
+        for cols in range(3):
+            # if element in position (x,y) in goal state does not match the instance state
+            if ((instance[rows][cols] != goal[rows][cols]) and (instance[rows][cols] != 0)): # and is not the blank space
+                print(instance[rows][cols])
+                # displacement is calculated from (0,0) top left, where bottom right is (2,2)
+                displacement = [(ix, iy) for iy, row in enumerate(goal) for ix, elem in enumerate(row) if
+                                elem == instance[rows][cols]]
+                # absolute displacement accounting for coordinate system
+                manhattan_dist += (abs(rows - displacement[0][0]) + abs(cols - displacement[0][1]))
+                print(displacement)
     return manhattan_dist
 
 
