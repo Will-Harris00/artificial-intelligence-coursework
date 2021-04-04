@@ -18,10 +18,12 @@ goal_condition = [[0,1,2],
 
 
 def main():
+    tree = Tree()
     display_grid(starting_condition)
     display_grid(goal_condition)
-    print(manhattan(starting_condition, goal_condition))
-    print(hamming(starting_condition, goal_condition))
+    print("\nManhattan distance: ", manhattan(starting_condition, goal_condition))
+    print("Hamming distance: ", hamming(starting_condition, goal_condition))
+    tree.getMoves(starting_condition)
 
 
 def display_grid(grid):
@@ -64,14 +66,61 @@ def manhattan(instance, goal): # sum of Manhattan distances between blocks and g
         for cols in range(3):
             # if element in position (x,y) in goal state does not match the instance state
             if ((instance[rows][cols] != goal[rows][cols]) and (instance[rows][cols] != 0)): # and is not the blank space
-                print(instance[rows][cols])
+                print("\nElement: ", instance[rows][cols])
                 # displacement is calculated from (0,0) top left, where bottom right is (2,2)
                 displacement = [(ix, iy) for iy, row in enumerate(goal) for ix, elem in enumerate(row) if
                                 elem == instance[rows][cols]]
                 # absolute displacement accounting for coordinate system
                 manhattan_dist += (abs(rows - displacement[0][0]) + abs(cols - displacement[0][1]))
-                print(displacement)
+                print("Location: ", displacement)
     return manhattan_dist
+
+
+
+class Node():
+    def __init__(self):
+        self.fn = 0 # estimated cost of the cheapest path to a goal state that goes through path of n
+        self.gn = 0 # cost of reaching n
+        self.hn = 0 # estimated cost of reaching goal from state of n
+        self.moves = 0
+        self.grid = []
+        self.path = []
+
+    def calculate_fn(self):
+        self.fn = self.gn + self.hn
+
+
+
+class Tree():
+    def __init__(self):
+        self.moves_arr = []
+
+    def getMoves(self, instance):
+        self.moves_arr = [] # keep track of possible moves from current state
+        blank_pos = self.locateBlank(instance)
+        print("\nBlank position: ", blank_pos)
+        self.shiftBlank(blank_pos)
+
+    def locateBlank(self, instance):
+        for x in range(3):
+            for y in range(3):
+                if instance[x][y] == 0:
+                    return [x, y]
+
+    def shiftBlank(self, blank_pos):
+        direction_arr = [[blank_pos[0], blank_pos[1]+1], # up
+                         [blank_pos[0], blank_pos[1]-1], # down
+                         [blank_pos[0]-1, blank_pos[1]], # left
+                         [blank_pos[0]+1, blank_pos[1]]] # right
+        for move in direction_arr: # go through all moves and filter those that are valid
+            self.validateMove(move)
+        print("Valid moves:", self.moves_arr)
+
+    def validateMove(self, move):
+        if (0 > move[0] or move[0] > 2) or (0 > move[1] or move[1] > 2):
+            return
+        else: # blank move is valid
+            self.moves_arr.append(move)
 
 
 if __name__ == "__main__":
