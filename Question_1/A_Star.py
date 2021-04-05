@@ -204,6 +204,27 @@ class Puzzle():
             print("A* search exhausted")
             return True
 
+    def pathNode(self):
+        # set path node for first board node in search array
+        path_node = Node(self.search_nodes[0].board,
+                         self.search_nodes[0].hn,
+                         self.search_nodes[0].gn,
+                         self.search_nodes[0].moves,
+                         self.search_nodes[0].path)
+        path_node.calculate_fn()
+        print("\nHello:", path_node.fn)
+
+    def getStats(self):
+        print("Path node: \n")
+        print("Estimated cost f(n) value: ", self.search_nodes[0].fn)
+        print("Heuristic h(n) value: ", self.search_nodes[0].hn)
+        print("Depth g(n) value: ", self.search_nodes[0].gn)
+
+    def markAsEvaluated(self):
+        current_node = self.search_nodes[0]
+        self.evaluated_nodes.append(current_node)
+        self.search_nodes.pop(0)
+
     def solve(self):
         self.initialise()
 
@@ -211,13 +232,9 @@ class Puzzle():
             if (self.isExhausted()):
                 exit(0)
 
-            # set path node for first board node in search array
-            path_node = Node(self.search_nodes[0].board,
-                             self.search_nodes[0].hn,
-                             self.search_nodes[0].gn,
-                             self.search_nodes[0].moves,
-                             self.search_nodes[0].path)
-            path_node.calculate_fn()
+            self.pathNode() # generate the next node to be evaluated
+            self.getStats() # print latest heuristic information
+            self.markAsEvaluated() # move evaluated node to completed array
             break # temporary break
 
 
