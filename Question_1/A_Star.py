@@ -19,6 +19,7 @@ goal_condition = [[0,1,2],
 
 
 def main():
+    heuristic = getHeuristicChoice()
     tree = Tree()
     display_grid(starting_condition)
     display_grid(goal_condition)
@@ -27,11 +28,40 @@ def main():
     tree.getMoves(starting_condition)
 
 
+def getHeuristicChoice():
+    print("Selections:"
+          "\n1: Hamming Distance (Count number of displaced tiles)"
+          "\n2: Manhattan Distance (Count taxicab distance of displaced tiles)")
+    while True:
+        heuristic = input("\n")
+        try:
+            heuristic = int(heuristic)
+        except:
+            print("Selection must be an integer number")
+            continue
+        if heuristic == 1:
+            break
+        elif heuristic == 2:
+            break
+
+        print('Please enter a valid number')
+        continue
+    return heuristic
+
+
 def display_grid(grid):
     print(grid[0][0],grid[0][1],grid[0][2])
     print(grid[1][0],grid[1][1],grid[1][2])
     print(grid[2][0],grid[2][1],grid[2][2])
     print("\n")
+
+
+def selectHeuristic(h, instance, goal):
+    if h == 1:
+        heuristic_dist = manhattan(instance, goal)
+    elif h == 2:
+        heuristic_dist = hamming(instance, goal)
+    return heuristic_dist
 
 
 def hamming(instance, goal): # number of blocks out of place
@@ -79,12 +109,12 @@ def manhattan(instance, goal): # sum of Manhattan distances between blocks and g
 
 
 class Node():
-    def __init__(self):
+    def __init__(self, board):
         self.fn = 0 # estimated cost of the cheapest path to a goal state that goes through path of n
         self.gn = 0 # cost of reaching n
         self.hn = 0 # estimated cost of reaching goal from state of n
         self.moves = 0
-        self.grid = []
+        self.board = board # initialise the node with a puzzle board state
         self.path = []
 
     def calculate_fn(self):
@@ -139,6 +169,22 @@ class Tree():
             # add new instance state to array
             new_instances.append(temp_board)
         return new_instances
+
+
+
+class Puzzle():
+    def __init__(self, heuristic):
+        self.current_state = starting_condition
+        self.goal_state = goal_condition
+        self.heuristic = heuristic
+        self.parent = 0
+        self.gn = 0
+
+    def solve(self):
+        self.hn = selectHeuristic(self.heuristic, self.current_state, self.goal_state)
+
+
+
 
 
 if __name__ == "__main__":
