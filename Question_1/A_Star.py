@@ -20,6 +20,8 @@ goal_condition = [[0,1,2],
 
 def main():
     heuristic = getHeuristicChoice()
+    puzzle = Puzzle(heuristic)
+    puzzle.solve()
     tree = Tree()
     display_grid(starting_condition)
     display_grid(goal_condition)
@@ -56,10 +58,10 @@ def display_grid(grid):
     print("\n")
 
 
-def selectHeuristic(h, instance, goal):
-    if h == 1:
+def selectHeuristic(heuristic, instance, goal):
+    if heuristic == 1:
         heuristic_dist = manhattan(instance, goal)
-    elif h == 2:
+    elif heuristic == 2:
         heuristic_dist = hamming(instance, goal)
     return heuristic_dist
 
@@ -109,13 +111,15 @@ def manhattan(instance, goal): # sum of Manhattan distances between blocks and g
 
 
 class Node():
-    def __init__(self, board):
+    def __init__(self, board, gn=0, hn=0, moves=0, path=None):
+        if path is None:
+            path = []
         self.fn = 0 # estimated cost of the cheapest path to a goal state that goes through path of n
-        self.gn = 0 # cost of reaching n
-        self.hn = 0 # estimated cost of reaching goal from state of n
-        self.moves = 0
+        self.gn = gn # cost of reaching n
+        self.hn = hn # estimated cost of reaching goal from state of n
+        self.moves = moves
         self.board = board # initialise the node with a puzzle board state
-        self.path = []
+        self.path = path
 
     def calculate_fn(self):
         self.fn = self.gn + self.hn
@@ -174,17 +178,47 @@ class Tree():
 
 class Puzzle():
     def __init__(self, heuristic):
+        self.heuristic = heuristic
         self.current_state = starting_condition
         self.goal_state = goal_condition
-        self.heuristic = heuristic
+
         self.parent = 0
         self.gn = 0
 
-    def solve(self):
+        self.search_nodes = []
+        self.evaluated_nodes = []
+        self.nodes_considered = 0
+
+    def initialise(self):
+        # evaluate initial state of puzzle
         self.hn = selectHeuristic(self.heuristic, self.current_state, self.goal_state)
+        print("Value of h(n):", self.hn)
+        node = Node(self.current_state)
+        node.hn = self.hn
+        node.gn = 0
+        self.search_nodes.append(node)
 
+    def isExhausted(self):
+        if ((len(self.search_nodes) == 0 or
+            (len(self.evaluated_nodes) > self.nodes_considered))):
+            print("A* search exhausted")
+            return True
 
+    def solve(self):
+        self.initialise()
 
+        while True:
+            if (self.isExhausted()):
+                exit(0)
+
+            # set path node for first board node in search array
+            path_node = Node(self.search_nodes[0].board,
+                             self.search_nodes[0].hn,
+                             self.search_nodes[0].gn,
+                             self.search_nodes[0].moves,
+                             self.search_nodes[0].path)
+            path_node.calculate_fn()
+            break # temporary break
 
 
 if __name__ == "__main__":
