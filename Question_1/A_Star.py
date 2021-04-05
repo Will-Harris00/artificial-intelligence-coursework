@@ -1,3 +1,4 @@
+import copy
 """
 Question 1.3: General solution of the 8-grid using A*
 
@@ -95,16 +96,18 @@ class Tree():
     def __init__(self):
         self.moves_arr = []
 
-    def getMoves(self, instance):
+    def getMoves(self, current):
         self.moves_arr = [] # keep track of possible moves from current state
-        blank_pos = self.locateBlank(instance)
+        blank_pos = self.locateBlank(current)
         print("\nBlank position: ", blank_pos)
         self.shiftBlank(blank_pos)
+        new_instances = self.expandNewInstances(current, blank_pos)
+        print("New instances: ", new_instances)
 
-    def locateBlank(self, instance):
+    def locateBlank(self, current):
         for x in range(3):
             for y in range(3):
-                if instance[x][y] == 0:
+                if current[x][y] == 0:
                     return [x, y]
 
     def shiftBlank(self, blank_pos):
@@ -121,6 +124,21 @@ class Tree():
             return
         else: # blank move is valid
             self.moves_arr.append(move)
+
+    def expandNewInstances(self, current, blank_pos):
+        new_instances = [] # array of possible new instances
+        for shift_blank in self.moves_arr:
+            # create temporary copy of current board state
+            temp_board = copy.deepcopy(current)
+            # store element that is being swapped with blank
+            temp_elem_swap = temp_board[shift_blank[0]][shift_blank[1]]
+            # overwrite element with blank
+            temp_board[shift_blank[0]][shift_blank[1]] = 0
+            # overwrite blank with element
+            temp_board[blank_pos[0]][blank_pos[1]] = temp_elem_swap
+            # add new instance state to array
+            new_instances.append(temp_board)
+        return new_instances
 
 
 if __name__ == "__main__":
