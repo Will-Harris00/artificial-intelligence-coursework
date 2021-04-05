@@ -22,12 +22,14 @@ def main():
     heuristic = getHeuristicChoice()
     puzzle = Puzzle(heuristic)
     puzzle.solve()
-    tree = Tree()
+    """
+    board = Board()
     display_grid(starting_condition)
     display_grid(goal_condition)
     print("\nManhattan distance: ", manhattan(starting_condition, goal_condition))
     print("Hamming distance: ", hamming(starting_condition, goal_condition))
-    tree.getMoves(starting_condition)
+    board.getMoves(starting_condition)
+    """
 
 
 def getHeuristicChoice():
@@ -118,7 +120,7 @@ class Node():
         self.gn = gn # cost of reaching n
         self.hn = hn # estimated cost of reaching goal from state of n
         self.moves = moves
-        self.board = board # initialise the node with a puzzle board state
+        self.state = board # initialise the node with a puzzle board state
         self.path = path
 
     def calculate_fn(self):
@@ -126,29 +128,30 @@ class Node():
 
 
 
-class Tree():
+class Board():
     def __init__(self):
         self.moves_arr = []
+        self.blank_pos = []
 
     def getMoves(self, current):
         self.moves_arr = [] # keep track of possible moves from current state
-        blank_pos = self.locateBlank(current)
-        print("\nBlank position: ", blank_pos)
-        self.shiftBlank(blank_pos)
-        new_instances = self.expandNewInstances(current, blank_pos)
+        self.locateBlank(current)
+        print("\nBlank position: ", self.blank_pos)
+        self.shiftBlank()
+        new_instances = self.expandNewInstances(current)
         print("New instances: ", new_instances)
 
     def locateBlank(self, current):
         for x in range(3):
             for y in range(3):
                 if current[x][y] == 0:
-                    return [x, y]
+                    self.blank_pos = [x,y]
 
-    def shiftBlank(self, blank_pos):
-        direction_arr = [[blank_pos[0], blank_pos[1]+1], # up
-                         [blank_pos[0], blank_pos[1]-1], # down
-                         [blank_pos[0]-1, blank_pos[1]], # left
-                         [blank_pos[0]+1, blank_pos[1]]] # right
+    def shiftBlank(self):
+        direction_arr = [[self.blank_pos[0], self.blank_pos[1]+1], # up
+                         [self.blank_pos[0], self.blank_pos[1]-1], # down
+                         [self.blank_pos[0]-1, self.blank_pos[1]], # left
+                         [self.blank_pos[0]+1, self.blank_pos[1]]] # right
         for move in direction_arr: # go through all moves and filter those that are valid
             self.validateMove(move)
         print("Valid moves:", self.moves_arr)
@@ -159,7 +162,7 @@ class Tree():
         else: # blank move is valid
             self.moves_arr.append(move)
 
-    def expandNewInstances(self, current, blank_pos):
+    def expandNewInstances(self, current):
         new_instances = [] # array of possible new instances
         for shift_blank in self.moves_arr:
             # create temporary copy of current board state
@@ -169,7 +172,7 @@ class Tree():
             # overwrite element with blank
             temp_board[shift_blank[0]][shift_blank[1]] = 0
             # overwrite blank with element
-            temp_board[blank_pos[0]][blank_pos[1]] = temp_elem_swap
+            temp_board[self.blank_pos[0]][self.blank_pos[1]] = temp_elem_swap
             # add new instance state to array
             new_instances.append(temp_board)
         return new_instances
@@ -206,13 +209,13 @@ class Puzzle():
 
     def pathNode(self):
         # set path node for first board node in search array
-        path_node = Node(self.search_nodes[0].board,
+        self.path_node = Node(self.search_nodes[0].state,
                          self.search_nodes[0].hn,
                          self.search_nodes[0].gn,
                          self.search_nodes[0].moves,
                          self.search_nodes[0].path)
-        path_node.calculate_fn()
-        print("\nHello:", path_node.fn)
+        self.path_node.calculate_fn()
+        print("\nHello:", self.path_node.fn)
 
     def getStats(self):
         print("Path node: \n")
@@ -225,7 +228,13 @@ class Puzzle():
         self.evaluated_nodes.append(current_node)
         self.search_nodes.pop(0)
 
+    def isPresent(self, node):
+        for evald_node in self.evaluated_nodes:
+            if node == evald_node.state:
+                return True
+
     def solve(self):
+        board = Board()
         self.initialise()
 
         while True:
@@ -235,6 +244,11 @@ class Puzzle():
             self.pathNode() # generate the next node to be evaluated
             self.getStats() # print latest heuristic information
             self.markAsEvaluated() # move evaluated node to completed array
+
+            board.getMoves(self.path_node.state)
+            for node in board.moves_arr:
+                if self.isPresent(node):
+                    continue
             break # temporary break
 
 
