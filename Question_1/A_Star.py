@@ -111,6 +111,13 @@ def manhattan(instance, goal): # sum of Manhattan distances between blocks and g
     return manhattan_dist
 
 
+def checkQueue(next_path, Queue):
+    for node in Queue:
+        if next_path.state == node.state and node.fn >= next_path.fn:
+            return False
+    return True
+
+
 
 class Node():
     def __init__(self, board, gn=0, hn=0, moves=0, path=None):
@@ -134,12 +141,13 @@ class Board():
         self.blank_pos = []
 
     def getMoves(self, current):
-        self.moves_arr = [] # keep track of possible moves from current state
+        # self.moves_arr = [] # keep track of possible moves from current state
         self.locateBlank(current)
         print("\nBlank position: ", self.blank_pos)
         self.shiftBlank()
         new_instances = self.expandNewInstances(current)
         print("New instances: ", new_instances)
+        return new_instances
 
     def locateBlank(self, current):
         for x in range(3):
@@ -233,6 +241,9 @@ class Puzzle():
             if node == evald_node.state:
                 return True
 
+    def nextMove(self):
+        return
+
     def solve(self):
         board = Board()
         self.initialise()
@@ -245,11 +256,17 @@ class Puzzle():
             self.getStats() # print latest heuristic information
             self.markAsEvaluated() # move evaluated node to completed array
 
-            board.getMoves(self.path_node.state)
-            for node in board.moves_arr:
+            new_instances = board.getMoves(self.path_node.state)
+            for node in new_instances:
                 if self.isPresent(node):
                     continue
+                next_path = Node(node)
+                print(self.heuristic)
+                print(next_path.state)
+                print(self.goal_state)
+                break
             break # temporary break
+
 
 
 if __name__ == "__main__":
