@@ -264,6 +264,17 @@ class Puzzle():
                 print(self.heuristic)
                 print(next_path.state)
                 print(self.goal_state)
+
+                next_path.hn = selectHeuristic(self.heuristic, next_path.state, self.goal_state)
+                next_path.gn = self.path_node.gn + 1
+                next_path.moves = self.path_node.moves + 1
+                next_path.path = copy.deepcopy(self.path_node.path)
+                next_path.path.append(self.path_node.state)
+                next_path.calculate_fn()
+
+                if checkQueue(next_path, self.search_nodes):
+                    self.search_nodes.append(next_path)
+                    self.nodes_considered += 1
                 break
             break # temporary break
 
