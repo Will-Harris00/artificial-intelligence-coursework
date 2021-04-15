@@ -1,4 +1,6 @@
-import copy
+from copy import deepcopy
+import numpy as np
+
 """
 Question 1.3: General solution of the 8-grid using A*
 
@@ -9,9 +11,15 @@ user can input any start and goal state. (5 marks)
 (Hint: can this be done for any generic pair of configurations...?)
 """
 
+# original puzzle for manhattan heuristic
 starting_condition = [[7,2,4],
                       [5,0,6],
                       [8,3,1]]
+
+# simplified puzzle for hamming heuristic
+# starting_condition = [[3,2,5],
+#                       [4,1,0],
+#                       [6,7,8]]
 
 goal_condition = [[0,1,2],
                   [3,4,5],
@@ -69,23 +77,26 @@ def selectHeuristic(heuristic, instance, goal):
 
 
 def hamming(instance, goal): # number of blocks out of place
-    hamming_dist = 0
     # if we want the heuristic to be admissible, then we shouldn't count the blank tile
+    """
+    hamming_dist = 0
     for row in range(3):
         for col in range(3):
             if ((instance[row][col] != goal[row][col]) and (instance[row][col] != 0)):
                 hamming_dist += 1
+    """
+    return np.sum(instance != goal) - 1
     # print("Ham dist:", hamming_dist)
-    return hamming_dist
+    # return hamming_dist
 
 
 def manhattan(instance, goal): # sum of Manhattan distances between blocks and goal
+    # if we want the heuristic to be admissible, then we shouldn't count the blank tile
     manhattan_dist = 0
     # print("Instance:",instance)
     # print("Goal:",goal)
 
-    # if we want the heuristic to be admissible, then we shouldn't count the blank tile
-    for digit in range(1, 9): # hence we only search numbers 1 through 8
+    for digit in range(1, 9): # we only count displacement for numbers 1 through 8
         for row in range(3):
             for col in range(3):
                 # find position of number in instance state
@@ -98,8 +109,8 @@ def manhattan(instance, goal): # sum of Manhattan distances between blocks and g
                     goal_col = col
         manhattan_dist += (abs(instance_row - goal_row) + abs(instance_col - goal_col))
 
+
     """
-    # if we want the heuristic to be admissible, then we shouldn't count the blank tile
     for rows in range(3):
         for cols in range(3):
             # if element in position (x,y) in goal state does not match the instance state
@@ -112,6 +123,14 @@ def manhattan(instance, goal): # sum of Manhattan distances between blocks and g
                 manhattan_dist += (abs(rows - displacement[0][0]) + abs(cols - displacement[0][1]))
                 # print("Location: ", displacement)
     """
+
+    """
+    instance = np.reshape(instance, 9)
+    goal = np.reshape(goal, 9)
+    manhattan = abs(instance // 3 - goal // 3) + abs(instance % 3 - goal % 3)
+    return sum(manhattan[1:])
+    """
+
     # print("Man dist:", manhattan_dist)
     return manhattan_dist
 
@@ -152,7 +171,7 @@ class Board():
     def getMoves(self, current):
         self.moves_arr = [] # keep track of possible moves from current state
         self.locateBlank(current)
-        print("\nBlank position: ", self.blank_pos)
+        # print("\nBlank position:",self.blank_pos)
         self.shiftBlank()
         self.new_instances = self.expandNewInstances(current)
         # print("New instances:",self.new_instances)
@@ -182,7 +201,7 @@ class Board():
         new_instances = [] # array of possible new instances
         for shift_blank in self.moves_arr:
             # create temporary copy of current board state
-            temp_board = copy.deepcopy(current)
+            temp_board = deepcopy(current)
             # store element that is being swapped with blank
             temp_elem_swap = temp_board[shift_blank[0]][shift_blank[1]]
             # overwrite element with blank
@@ -296,7 +315,7 @@ class Puzzle():
                 next_path.hn = selectHeuristic(self.heuristic, next_path.state, self.goal_state)
                 next_path.gn = self.path_node.gn + 1
                 next_path.moves = self.path_node.moves + 1
-                next_path.path = copy.deepcopy(self.path_node.path)
+                next_path.path = deepcopy(self.path_node.path)
                 next_path.path.append(self.path_node.state)
                 next_path.calculate_fn()
 
