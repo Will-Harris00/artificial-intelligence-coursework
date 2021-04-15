@@ -27,20 +27,12 @@ goal_condition = [[0,1,2],
 
 
 def main():
-    heuristic = getHeuristicChoice()
+    heuristic = get_heuristic_choice()
     puzzle = Puzzle(heuristic)
     puzzle.solve()
-    """
-    board = Board()
-    display_grid(starting_condition)
-    display_grid(goal_condition)
-    print("\nManhattan distance: ", manhattan(starting_condition, goal_condition))
-    print("Hamming distance: ", hamming(starting_condition, goal_condition))
-    board.getMoves(starting_condition)
-    """
 
 
-def getHeuristicChoice():
+def get_heuristic_choice():
     print("Selections:"
           "\n1: Hamming Distance (Count number of displaced tiles)"
           "\n2: Manhattan Distance (Count taxicab distance of displaced tiles)")
@@ -68,7 +60,7 @@ def display_grid(grid):
     print("\n")
 
 
-def selectHeuristic(heuristic, instance, goal):
+def select_heuristic(heuristic, instance, goal):
     if heuristic == 1:
         heuristic_dist = hamming(instance, goal)
     elif heuristic == 2:
@@ -135,14 +127,14 @@ def manhattan(instance, goal): # sum of Manhattan distances between blocks and g
     return manhattan_dist
 
 
-def checkQueue(next_path, Queue):
+def check_queue(next_branch, Queue):
     for node in Queue:
-        if next_path.state == node.state and node.fn >= next_path.fn:
+        if next_branch.state == node.state and node.fn >= next_branch.fn:
             return False
     return True
 
 
-def getNodeFn(node):
+def get_node_fn(node):
     return node.fn
 
 
@@ -151,15 +143,12 @@ class Node():
     def __init__(self, state, hn=0, gn=0, moves=0, path=None):
         if path is None:
             path = []
-        self.fn = 0 # estimated cost of the cheapest path to a goal state that goes through path of n
+        self.fn = gn + hn # estimated cost of the cheapest path to a goal state that goes through path of n
         self.gn = gn # cost of reaching n
         self.hn = hn # estimated cost of reaching goal from state of n
         self.moves = moves
         self.state = state # initialise the node with a puzzle board state
         self.path = path
-
-    def calculate_fn(self):
-        self.fn = self.gn + self.hn
 
 
 
@@ -168,36 +157,36 @@ class Board():
         self.moves_arr = []
         self.blank_pos = []
 
-    def getMoves(self, current):
+    def get_moves(self, current):
         self.moves_arr = [] # keep track of possible moves from current state
-        self.locateBlank(current)
+        self.locate_blank(current)
         # print("\nBlank position:",self.blank_pos)
-        self.shiftBlank()
-        self.new_instances = self.expandNewInstances(current)
+        self.shift_blank()
+        self.new_instances = self.expand_new_instances(current)
         # print("New instances:",self.new_instances)
 
-    def locateBlank(self, current):
+    def locate_blank(self, current):
         for x in range(3):
             for y in range(3):
                 if current[x][y] == 0:
                     self.blank_pos = [x,y]
 
-    def shiftBlank(self):
+    def shift_blank(self):
         direction_arr = [[self.blank_pos[0]-1, self.blank_pos[1]], # left
                          [self.blank_pos[0], self.blank_pos[1]-1], # down
                          [self.blank_pos[0], self.blank_pos[1]+1], # up
                          [self.blank_pos[0]+1, self.blank_pos[1]]] # right
         for move in direction_arr: # go through all moves and filter those that are valid
-            self.validateMove(move)
+            self.validate_move(move)
         # print("Valid moves:",self.moves_arr)
 
-    def validateMove(self, move):
+    def validate_move(self, move):
         if (0 > move[0] or move[0] > 2) or (0 > move[1] or move[1] > 2):
             return
         else: # blank move is valid
             self.moves_arr.append(move)
 
-    def expandNewInstances(self, current):
+    def expand_new_instances(self, current):
         new_instances = [] # array of possible new instances
         for shift_blank in self.moves_arr:
             # create temporary copy of current board state
@@ -229,14 +218,14 @@ class Puzzle():
 
     def initialise(self):
         # evaluate initial state of puzzle
-        self.hn = selectHeuristic(self.heuristic, self.search_state, self.goal_state)
-        print("Value of h(n):", self.hn)
+        self.hn = select_heuristic(self.heuristic, self.search_state, self.goal_state)
+        # print("Value of h(n):",self.hn)
         node = Node(self.search_state)
         node.hn = self.hn
         node.gn = -1
         self.search_nodes.append(node)
 
-    def isExhausted(self):
+    def is_exhausted(self):
         # print("Queue:",self.search_nodes)
         # print(self.search_nodes[0].state)
         # print(self.search_nodes[0].fn)
@@ -249,41 +238,40 @@ class Puzzle():
             print("A* search exhausted")
             return True
 
-    def pathNode(self):
-        # set path node for first board node in search array
-        self.path_node = Node(self.search_nodes[0].state,
+    def path_node(self):
+        # set branch node for first node in search array
+        self.branch_node = Node(self.search_nodes[0].state,
                          self.search_nodes[0].hn,
                          self.search_nodes[0].gn,
                          self.search_nodes[0].moves,
                          self.search_nodes[0].path)
-        self.path_node.calculate_fn()
 
-    def getStats(self):
-        print("\nEvaluate path node:")
+    def get_stats(self):
+        print("\nEvaluate branch node:")
         print("Estimated cost f(n) value: ", self.search_nodes[0].fn)
         print("Heuristic h(n) value: ", self.search_nodes[0].hn)
         print("Depth g(n) value: ", self.search_nodes[0].gn)
-        display_grid(self.path_node.state)
+        display_grid(self.branch_node.state)
 
-    def markAsEvaluated(self):
+    def mark_evaluated(self):
         current_node = self.search_nodes[0]
         self.evaluated_nodes.append(current_node)
         self.search_nodes.pop(0)
 
-    def isPresent(self, node):
+    def is_present(self, node):
         for evald_node in self.evaluated_nodes:
             if node == evald_node.state:
                 return True
 
     def walkthrough(self):
-        self.path_node.path.append(self.goal_state)
+        self.branch_node.path.append(self.goal_state)
         print("Puzzle Solved \n")
-        print("In moves: ", self.path_node.moves)
-        print("Depth: ", self.path_node.gn)
+        print("In moves: ", self.branch_node.moves)
+        print("Depth: ", self.branch_node.gn)
         print("Nodes visited:", len(self.evaluated_nodes))
         print("Total nodes generated: ", self.nodes_considered)
         print("List of moves:\n")
-        for path_parent in self.path_node.path:
+        for path_parent in self.branch_node.path:
             display_grid(path_parent)
         exit(0)
 
@@ -292,38 +280,40 @@ class Puzzle():
         self.initialise()
 
         while True:
-            if (self.isExhausted()):
+            if (self.is_exhausted()):
                 exit(0)
 
-            self.pathNode() # generate the next node to be evaluated
-            self.getStats() # print latest heuristic information
-            self.markAsEvaluated() # move evaluated node to completed array
+            self.path_node() # generate the next node to be evaluated
+            self.get_stats() # print latest heuristic information
+            self.mark_evaluated() # move evaluated node to completed array
 
-            if (self.path_node.state == self.goal_state):
+            if (self.branch_node.state == self.goal_state):
                 self.walkthrough()
 
-            board.getMoves(self.path_node.state)
-            for node in board.new_instances:
-                if self.isPresent(node):
+            board.get_moves(self.branch_node.state)
+            for node_state in board.new_instances:
+                if self.is_present(node_state):
                     continue
 
-                next_path = Node(node)
                 # print(self.heuristic)
-                # print(next_path.state)
+                # print(next_branch.state)
                 # print(self.goal_state)
 
-                next_path.hn = selectHeuristic(self.heuristic, next_path.state, self.goal_state)
-                next_path.gn = self.path_node.gn + 1
-                next_path.moves = self.path_node.moves + 1
-                next_path.path = deepcopy(self.path_node.path)
-                next_path.path.append(self.path_node.state)
-                next_path.calculate_fn()
+                next_branch = Node(node_state, # state
+                                 select_heuristic(self.heuristic, node_state, self.goal_state), # hn
+                                 self.branch_node.gn + 1, # gn
+                                 self.branch_node.moves + 1, # moves
+                                 deepcopy(self.branch_node.path) # path
+                                )
 
-                if checkQueue(next_path, self.search_nodes):
-                    self.search_nodes.append(next_path)
+                # keep track of list of moves to reach current state
+                next_branch.path.append(self.branch_node.state)
+
+                if check_queue(next_branch, self.search_nodes):
+                    self.search_nodes.append(next_branch)
                     self.nodes_considered += 1
 
-            self.search_nodes.sort(key=getNodeFn)
+            self.search_nodes.sort(key=get_node_fn)
 
 
 if __name__ == "__main__":
