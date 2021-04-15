@@ -75,14 +75,14 @@ def hamming(instance, goal): # number of blocks out of place
         for col in range(3):
             if ((instance[row][col] != goal[row][col]) and (instance[row][col] != 0)):
                 hamming_dist += 1
-    print("Ham dist:", hamming_dist)
+    # print("Ham dist:", hamming_dist)
     return hamming_dist
 
 
 def manhattan(instance, goal): # sum of Manhattan distances between blocks and goal
     manhattan_dist = 0
-    print("Instance:",instance)
-    print("Goal:",goal)
+    # print("Instance:",instance)
+    # print("Goal:",goal)
 
     # if we want the heuristic to be admissible, then we shouldn't count the blank tile
     for digit in range(1, 9): # hence we only search numbers 1 through 8
@@ -98,20 +98,21 @@ def manhattan(instance, goal): # sum of Manhattan distances between blocks and g
                     goal_col = col
         manhattan_dist += (abs(instance_row - goal_row) + abs(instance_col - goal_col))
 
-
+    """
     # if we want the heuristic to be admissible, then we shouldn't count the blank tile
-    # for rows in range(3):
-    #     for cols in range(3):
-    #         # if element in position (x,y) in goal state does not match the instance state
-    #         if ((instance[rows][cols] != goal[rows][cols]) and (instance[rows][cols] != 0)): # and is not the blank space
-    #             # print("\nElement: ", instance[rows][cols])
-    #             # displacement is calculated from (0,0) top left, where bottom right is (2,2)
-    #             displacement = [(ix, iy) for iy, row in enumerate(goal) for ix, elem in enumerate(row) if
-    #                             elem == instance[rows][cols]]
-    #             # absolute displacement accounting for coordinate system
-    #             manhattan_dist += (abs(rows - displacement[0][0]) + abs(cols - displacement[0][1]))
-    #             # print("Location: ", displacement)
-    print("Man dist:", manhattan_dist)
+    for rows in range(3):
+        for cols in range(3):
+            # if element in position (x,y) in goal state does not match the instance state
+            if ((instance[rows][cols] != goal[rows][cols]) and (instance[rows][cols] != 0)): # and is not the blank space
+                # print("\nElement: ", instance[rows][cols])
+                # displacement is calculated from (0,0) top left, where bottom right is (2,2)
+                displacement = [(ix, iy) for iy, row in enumerate(goal) for ix, elem in enumerate(row) if
+                                elem == instance[rows][cols]]
+                # absolute displacement accounting for coordinate system
+                manhattan_dist += (abs(rows - displacement[0][0]) + abs(cols - displacement[0][1]))
+                # print("Location: ", displacement)
+    """
+    # print("Man dist:", manhattan_dist)
     return manhattan_dist
 
 
@@ -143,58 +144,54 @@ class Node():
 
 
 
-# class Board():
-#     def __init__(self):
-#         self.moves_arr = []
-#         self.blank_pos = []
-#         self.new_instances = []
+class Board():
+    def __init__(self):
+        self.moves_arr = []
+        self.blank_pos = []
 
-# def getMoves(self, current):
-#     self.moves_arr = [] # keep track of possible moves from current state
-#     self.locateBlank(current)
-#     # print("\nBlank position: ", self.blank_pos)
-#     self.shiftBlank()
-#     self.expandNewInstances(current)
-#     # print("New instances: ", self.new_instances)
+    def getMoves(self, current):
+        self.moves_arr = [] # keep track of possible moves from current state
+        self.locateBlank(current)
+        print("\nBlank position: ", self.blank_pos)
+        self.shiftBlank()
+        self.new_instances = self.expandNewInstances(current)
+        # print("New instances:",self.new_instances)
 
+    def locateBlank(self, current):
+        for x in range(3):
+            for y in range(3):
+                if current[x][y] == 0:
+                    self.blank_pos = [x,y]
 
-def locateBlank(current):
-    for x in range(3):
-        for y in range(3):
-            if current[x][y] == 0:
-                blank_pos = [x,y]
-    moves_arr = shiftBlank(blank_pos)
-    new_instances  = expandNewInstances(current, moves_arr, blank_pos)
-    return new_instances
+    def shiftBlank(self):
+        direction_arr = [[self.blank_pos[0]-1, self.blank_pos[1]], # left
+                         [self.blank_pos[0], self.blank_pos[1]-1], # down
+                         [self.blank_pos[0], self.blank_pos[1]+1], # up
+                         [self.blank_pos[0]+1, self.blank_pos[1]]] # right
+        for move in direction_arr: # go through all moves and filter those that are valid
+            self.validateMove(move)
+        # print("Valid moves:",self.moves_arr)
 
+    def validateMove(self, move):
+        if (0 > move[0] or move[0] > 2) or (0 > move[1] or move[1] > 2):
+            return
+        else: # blank move is valid
+            self.moves_arr.append(move)
 
-def shiftBlank(blank_pos):
-    moves_arr = []
-    direction_arr = [[blank_pos[0]-1, blank_pos[1]], # left
-                     [blank_pos[0], blank_pos[1]-1], # down
-                     [blank_pos[0], blank_pos[1]+1], # up
-                     [blank_pos[0]+1, blank_pos[1]]] # right
-    for move in direction_arr: # go through all moves and filter those that are valid
-        if not ((0 > move[0] or move[0] > 2) or (
-                0 > move[1] or move[1] > 2)):  # blank move is valid
-            moves_arr.append(move)
-    return moves_arr
-
-def expandNewInstances(current, moves_arr, blank_pos):
-    new_instances = [] # array of possible new instances
-    for shift_blank in moves_arr:
-        print(shift_blank)
-        # create temporary copy of current board state
-        temp_board = copy.deepcopy(current)
-        # store element that is being swapped with blank
-        temp_elem_swap = temp_board[shift_blank[0]][shift_blank[1]]
-        # overwrite element with blank
-        temp_board[shift_blank[0]][shift_blank[1]] = 0
-        # overwrite blank with element
-        temp_board[blank_pos[0]][blank_pos[1]] = temp_elem_swap
-        # add new instance state to array
-        new_instances.append(temp_board)
-    return new_instances
+    def expandNewInstances(self, current):
+        new_instances = [] # array of possible new instances
+        for shift_blank in self.moves_arr:
+            # create temporary copy of current board state
+            temp_board = copy.deepcopy(current)
+            # store element that is being swapped with blank
+            temp_elem_swap = temp_board[shift_blank[0]][shift_blank[1]]
+            # overwrite element with blank
+            temp_board[shift_blank[0]][shift_blank[1]] = 0
+            # overwrite blank with element
+            temp_board[self.blank_pos[0]][self.blank_pos[1]] = temp_elem_swap
+            # add new instance state to array
+            new_instances.append(temp_board)
+        return new_instances
 
 
 
@@ -206,7 +203,6 @@ class Puzzle():
 
         self.parent = 0
         self.gn = 0
-        self.hn = selectHeuristic(self.heuristic, self.search_state, self.goal_state)
 
         self.search_nodes = []
         self.evaluated_nodes = []
@@ -214,6 +210,7 @@ class Puzzle():
 
     def initialise(self):
         # evaluate initial state of puzzle
+        self.hn = selectHeuristic(self.heuristic, self.search_state, self.goal_state)
         print("Value of h(n):", self.hn)
         node = Node(self.search_state)
         node.hn = self.hn
@@ -221,13 +218,13 @@ class Puzzle():
         self.search_nodes.append(node)
 
     def isExhausted(self):
-        print("Queue:",self.search_nodes)
-        print(self.search_nodes[0].state)
-        print(self.search_nodes[0].fn)
-        print(self.search_nodes[0].hn)
-        print(self.search_nodes[0].gn)
-        print("Evaluated:",self.evaluated_nodes)
-        print("Num considered:",self.nodes_considered)
+        # print("Queue:",self.search_nodes)
+        # print(self.search_nodes[0].state)
+        # print(self.search_nodes[0].fn)
+        # print(self.search_nodes[0].hn)
+        # print(self.search_nodes[0].gn)
+        # print("Evaluated:",self.evaluated_nodes)
+        # print("Num considered:",self.nodes_considered)
         if ((len(self.search_nodes) == 0 or
             (len(self.evaluated_nodes) > self.nodes_considered))):
             print("A* search exhausted")
@@ -272,10 +269,10 @@ class Puzzle():
         exit(0)
 
     def solve(self):
+        board = Board()
         self.initialise()
 
         while True:
-            print("Search:",self.search_state)
             if (self.isExhausted()):
                 exit(0)
 
@@ -286,8 +283,8 @@ class Puzzle():
             if (self.path_node.state == self.goal_state):
                 self.walkthrough()
 
-            new_instances = locateBlank(self.path_node.state)
-            for node in new_instances:
+            board.getMoves(self.path_node.state)
+            for node in board.new_instances:
                 if self.isPresent(node):
                     continue
 
