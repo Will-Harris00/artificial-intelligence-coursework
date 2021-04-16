@@ -2,24 +2,18 @@ from copy import deepcopy
 import numpy as np
 
 """
-Question 1.3: General solution of the 8-grid using A*
-
-Write a general version of the A* algorithm (using either of the two heuristic
-functions described above) to solve a generic version of the 8-grid where the
-user can input any start and goal state. (5 marks)
-
-(Hint: can this be done for any generic pair of configurations...?)
+Question 1.2.3: Specific of the 8-puzzle using A*
 """
 
 # original puzzle for manhattan heuristic
-starting_condition = [[7,2,4],
-                      [5,0,6],
-                      [8,3,1]]
+# starting_condition = [[7,2,4],
+#                       [5,0,6],
+#                       [8,3,1]]
 
 # simplified puzzle for hamming heuristic
-# starting_condition = [[3,2,5],
-#                       [4,1,0],
-#                       [6,7,8]]
+starting_condition = [[2,0,5],
+                      [3,6,4],
+                      [7,8,1]]
 
 goal_condition = [[0,1,2],
                   [3,4,5],
